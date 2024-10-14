@@ -6,7 +6,8 @@ const UserSchema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String, required: true, unique: true, },
-    createdAt: { type: Date }
+    createdAt: { type: Date },
+    blacklistedTokens: { type: [String], default: [] },
 });
 
 UserSchema.methods.verifyPassword = async function(password){

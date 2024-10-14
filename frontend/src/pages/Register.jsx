@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 
 const RegisterPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const auths = useSelector(state => state.isAuthReducer)
 
@@ -20,15 +21,24 @@ const RegisterPage = () => {
   const handleRegister = async (data) => {
     try {
        const response = await postApi('/auth/register', data);
-       console.log('res ',response);
-
-      // If successful, show success message
-      setSuccessMessage(`Registration successful for ${data.name}`);
+       console.log("::: ",response);
+      if (response.status === 200) {
+        // If successful, show success message
+        setSuccessMessage(`Registration successful for ${data.name}`);
+      }else {
+        setErrorMessage('email or password already existing.')
+      }
     } catch (error) {
       console.error("Registration failed", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage("check email and password");
+      } else {
+        setErrorMessage("An unexpected error occurred. Please try again."); 
+      }
+      setSuccessMessage("");
     }
   };
-
+  console.log(errorMessage);
   return (
     <Box className="min-h-screen flex justify-center items-center bg-gray-100">
       <Box className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
@@ -36,6 +46,7 @@ const RegisterPage = () => {
           Register
         </Typography>
         {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
+        {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>} 
         <RegisterForm onSubmit={handleRegister} /> 
         <Typography className="p-4 text-center">
             Already have an account?{' '}

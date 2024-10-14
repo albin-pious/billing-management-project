@@ -20,19 +20,19 @@ const BillConfirmationModal = ({ open, onClose, billData, pdfPath }) => {
             <li key={index}>
               <strong>{safeToString(product.name)}</strong> | 
               Quantity: {safeToString(product.quantity)} | 
-              Price: ${safeToString(product.price)} | 
-              Subtotal: ${((Number(product.quantity) || 0) * (Number(product.price) || 0)).toFixed(2)}
+              Price: &#x20b9;{safeToString(product.price)} | 
+              Subtotal: &#x20b9;{((Number(product.quantity) || 0) * (Number(product.price) || 0)).toFixed(2)}
             </li>
           ))}
         </ul>
         <p className="font-bold">
-          Total Amount: ${(Number(billData?.totalAmount) || 0).toFixed(2)}
+          Total Amount: &#x20b9;{(Number(billData?.totalAmount) || 0).toFixed(2)}
         </p>
         <p className="text-sm text-gray-500 mt-2">You can download the bill as a PDF below.</p>
       </DialogContent>
       <DialogActions>
         <a href={pdfPath} download target="_blank" rel="noopener noreferrer">
-          <Button className="text-white bg-blue-500 hover:bg-blue-600">
+          <Button className="text-white bg-blue-500 hover:bg-blue-600 hover:text-white">
             Download PDF
           </Button>
         </a>

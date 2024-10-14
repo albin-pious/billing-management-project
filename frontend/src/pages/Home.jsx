@@ -7,6 +7,11 @@ import { Box, Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { BASE_URL, deleteApi, getApi, postApi, putApi } from '../utils/api';
 import BillConfirmationModal from '../components/home/BillConfirmationModal';
+import { Constants } from '../utils/Constants';
+import { useNavigate } from 'react-router-dom';
+import { bindActionCreators } from 'redux';
+import { useDispatch } from 'react-redux';
+import { actionCreators } from '../statemanagement';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -17,6 +22,9 @@ const Home = () => {
   const [openBillModal, setOpenBillModal] = useState(false);
   const [billData, setBillData] = useState(null);
   const [pdfPath, setPdfPath] = useState('');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const actions = bindActionCreators(actionCreators, dispatch);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -35,10 +43,24 @@ const Home = () => {
   const handleOpenModal = () => {
     setCurrentProduct(null);
     setIsModalOpen(true);
-  };
+  }; 
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getApi('/products');
+        console.log(response);
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsModalOpen(false);console.error('Error occurred during logout:', error);
     setCurrentProduct(null);
   };
 
@@ -66,7 +88,7 @@ const Home = () => {
       console.error('Error saving product:', error);
     }
   };
-  
+
 
   const handleEditProduct = (product) => {
     setCurrentProduct(product);
@@ -101,38 +123,48 @@ const Home = () => {
       }
     });
   };
-  
 
-    const handleCreateBill = async () => {
-        try {
-            const billData = selectedProducts.map(sp => ({
-                productId: sp.productId,
-                quantity: sp.quantity
-            }));
+  const handleCreateBill = async () => {
+    try {
+        const billData = selectedProducts.map(sp => ({
+            productId: sp.productId,
+            quantity: sp.quantity
+        }));
+
+        const response = await postApi('/bill', { products: billData });
     
-            const response = await postApi('/bill', { products: billData });
-        
-            setBillData({
-                billId: response.bill._id,
-                products: response.bill.products.map(p => ({
-                    name: p.name || 'Unknown Product',
-                    quantity: p.quantity,
-                    price: p.price,
-                    _id: p._id
-                })),
-                createdBy: response.bill.createdBy || 'Unknown',
-                totalAmount: response.bill.totalAmount || 0
-            });
-            setPdfPath(`${BASE_URL}${response.pdfUrl}` || '');
-            setOpenBillModal(true);
-        } catch (error) {
-            console.error('Error creating bill:', error);
-        }
-    };
+        setBillData({
+            billId: response.bill._id,
+            products: response.bill.products.map(p => ({
+              name: p.name || 'Unknown Product',
+              quantity: p.quantity,
+              price: p.price,
+              _id: p._id
+            })),
+            createdBy: response.bill.createdBy || 'Unknown',
+            totalAmount: response.bill.totalAmount || 0
+        });
+        setPdfPath(`${BASE_URL}${response.pdfUrl}` || '');
+        setOpenBillModal(true);
+    } catch (error) {
+      console.error('Error creating bill:', error);
+    }
+  };
   
 
-  const handleLogout = () => {
-    alert('Logged out successfully');
+  const handleLogout = async() => {
+    const refreshToken = localStorage.getItem(Constants.refreshToken)
+    try {
+      const res = postApi('/auth/logout', {refreshToken})
+      if(res){
+        localStorage.removeItem(Constants.token);
+        localStorage.removeItem(Constants.refreshToken);
+        actions.isAuthenticated({ jwt: null });
+        navigate('/login')
+      }
+    } catch (error) {
+      console.error('Error occurred during logout:', error);
+    }
   };
 
   return (
@@ -140,7 +172,7 @@ const Home = () => {
       <Navbar onLogout={handleLogout} />
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Product Dashboard</h1>
+          <h1 className="text-2xl font-bold">Welcome Admin,</h1>
           <MultiSelectControls
             isMultiSelectMode={isMultiSelectMode}
             handleToggleMultiSelect={handleToggleMultiSelect}

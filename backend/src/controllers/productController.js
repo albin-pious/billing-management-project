@@ -1,9 +1,9 @@
+import mongoose from 'mongoose'
 import Products from "../models/Products.js";
 import { handleError } from "../utils/helper.js";
 
 export const createProducts = async(req, res)=>{
     const { name, price, quantity } = req.body;
-    console.log(req.user._id);
     try {
         if(!name, !price, !quantity){
             return res.status(400).json({ message: 'Missing required fields' });
@@ -25,7 +25,8 @@ export const createProducts = async(req, res)=>{
 
 export const fetchProducts = async(req, res)=>{
     try {
-        const products = await Products.find();
+        const user = new mongoose.Types.ObjectId(req.user.id)
+        const products = await Products.find({createdBy: user});
         res.status(200).json({ message: "products fetched successfully", data: products })
     } catch (error) {
         handleError(error, res);

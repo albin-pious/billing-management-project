@@ -73,3 +73,26 @@ export const refreshToken = async(req, res)=>{
         handleError(error, res)
     }
 }
+
+export const userLogout = async(req, res)=>{
+    const { refreshToken } = req.body;
+    try {
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required' });
+        }
+
+        const decoded = verifyJWTToken(refreshToken);
+        if (!decoded) {
+            return res.status(403).json({ message: 'Invalid refresh token' });
+        }
+
+        await User.updateOne(
+            { _id: decoded.id },
+            { $addToSet: { blacklistedTokens: refreshToken } } 
+        );
+
+        return res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+        handleError(error, res);
+    }
+}
