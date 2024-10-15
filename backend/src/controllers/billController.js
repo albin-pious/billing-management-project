@@ -56,7 +56,7 @@ export const createBill = async (req, res) => {
         
         const savedBill = await newBill.save();
 
-        const pdfFileName = await generatePDF(savedBill, createdBy, billProducts);
+        const pdfFileName = await generatePDF(savedBill, createdBy.name, billProducts);
 
         res.status(201).json({
             message: 'Bill created successfully',
@@ -84,6 +84,9 @@ async function generatePDF(bill, createdBy, detailedProducts) {
         const writeStream = fs.createWriteStream(pdfPath);
 
         const doc = new PDFDocument();
+
+        // doc font which support ₹ symbol
+        doc.font(path.join(__dirname, "../assets/fonts/NotoSans-VariableFont_wdth,wght.ttf"))
         doc.pipe(writeStream);
 
         // Header

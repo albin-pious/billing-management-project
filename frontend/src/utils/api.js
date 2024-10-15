@@ -62,7 +62,6 @@ api.interceptors.response.use(
 
 export const getApi = async (endpoint, data) => {
     return await api.get(endpoint, data).then((result) => {
-        console.log("Success ", result.data);
         return result.data;
     }).catch(e => {
         console.log("Error ", e);
@@ -72,7 +71,6 @@ export const getApi = async (endpoint, data) => {
 
 export const postApi = async (endpoint, data) => {
     return await api.post(endpoint, data).then((result) => {
-        console.log("Success", result.data)
         return result.data
     }).catch(e => {
         console.log("Error", e)
@@ -82,7 +80,6 @@ export const postApi = async (endpoint, data) => {
 
 export const putApi = async (endpoint, data) => {
     return await api.put(endpoint, data).then((result) => {
-        console.log("Success", result.data)
         return result.data
     }).catch(e => {
         console.log("Error", e)
@@ -92,7 +89,6 @@ export const putApi = async (endpoint, data) => {
 
 export const deleteApi = async (endpoint, data)=> {
     return await api.delete(endpoint, data).then((result) => {
-        console.log("Success", result.data)
         return result.data
     }).catch(e => {
         console.log("Error", e)

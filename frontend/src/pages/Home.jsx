@@ -3,22 +3,22 @@ import Navbar from '../components/layouts/Navbar';
 import ProductCard from '../components/home/ProductCards';
 import ProductModal from '../components/home/ProductModal';
 import MultiSelectControls from '../components/home/MultiSelectController';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { BASE_URL, deleteApi, getApi, postApi, putApi } from '../utils/api';
 import BillConfirmationModal from '../components/home/BillConfirmationModal';
 import { Constants } from '../utils/Constants';
 import { useNavigate } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { actionCreators } from '../statemanagement';
+import { addProduct, clearSelectedProducts, removeProduct, updateQuantity } from '../statemanagement/actioncreators';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);
   const [openBillModal, setOpenBillModal] = useState(false);
   const [billData, setBillData] = useState(null);
   const [pdfPath, setPdfPath] = useState('');
@@ -26,11 +26,18 @@ const Home = () => {
   const dispatch = useDispatch();
   const actions = bindActionCreators(actionCreators, dispatch);
 
+  const selectedProducts = useSelector(state => state.selectedProducts);
+  const totalPayableAmount = useSelector(state =>
+    state.selectedProducts.length > 0
+    ? state.selectedProducts.reduce((total, product) => total + (product.price * product.quantity), 0)
+    : 0
+  );
+  
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await getApi('/products');
-        console.log(response);
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -49,7 +56,6 @@ const Home = () => {
     const fetchProducts = async () => {
       try {
         const response = await getApi('/products');
-        console.log(response);
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -60,7 +66,7 @@ const Home = () => {
   }, []);
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);console.error('Error occurred during logout:', error);
+    setIsModalOpen(false);
     setCurrentProduct(null);
   };
 
@@ -89,7 +95,6 @@ const Home = () => {
     }
   };
 
-
   const handleEditProduct = (product) => {
     setCurrentProduct(product);
     setIsModalOpen(true);
@@ -99,7 +104,7 @@ const Home = () => {
     try {
         await deleteApi(`/products?id=${id}`)
         setProducts((prevProducts) => prevProducts.filter((p) => p._id !== id));
-        setSelectedProducts((prevSelectedProducts) => prevSelectedProducts.filter((p) => p._id !== id));
+        dispatch(actionCreators.removeProduct(id));
     } catch (error) {
         console.error('Error deleting product:', error);
     }
@@ -107,50 +112,48 @@ const Home = () => {
 
   const handleToggleMultiSelect = () => {
     setIsMultiSelectMode(!isMultiSelectMode);
-    setSelectedProducts([]);
+    dispatch(clearSelectedProducts());
   };
 
-  const handleSelectProduct = (id, quantity) => {
-    setSelectedProducts((prevSelected) => {
-      const existingProduct = prevSelected.find(p => p.productId === id);
-      if (existingProduct) {
-        if (quantity === 0) {
-          return prevSelected.filter(p => p.productId !== id);
-        }
-        return prevSelected.map(p => p.productId === id ? { ...p, quantity } : p);
+  const handleSelectProduct = (id, quantity, price) => {
+    const existingProduct = selectedProducts.find(p => p.productId === id);
+    if (existingProduct) {
+      if (quantity === 0) {
+        dispatch(removeProduct(id));
       } else {
-        return [...prevSelected, { productId: id, quantity }];
+        dispatch(updateQuantity({ productId: id, quantity }));
       }
-    });
+    } else {
+      dispatch(addProduct({ productId: id, quantity, price }));
+    }
   };
 
   const handleCreateBill = async () => {
     try {
-        const billData = selectedProducts.map(sp => ({
-            productId: sp.productId,
-            quantity: sp.quantity
-        }));
+      const billData = selectedProducts.map(sp => ({
+        productId: sp.productId,
+        quantity: sp.quantity
+      }));
 
-        const response = await postApi('/bill', { products: billData });
+      const response = await postApi('/bill', { products: billData });
     
-        setBillData({
-            billId: response.bill._id,
-            products: response.bill.products.map(p => ({
-              name: p.name || 'Unknown Product',
-              quantity: p.quantity,
-              price: p.price,
-              _id: p._id
-            })),
-            createdBy: response.bill.createdBy || 'Unknown',
-            totalAmount: response.bill.totalAmount || 0
-        });
-        setPdfPath(`${BASE_URL}${response.pdfUrl}` || '');
-        setOpenBillModal(true);
+      setBillData({
+        billId: response.bill._id,
+        products: response.bill.products.map(p => ({
+          name: p.name || 'Unknown Product',
+          quantity: p.quantity,
+          price: p.price,
+          _id: p._id
+        })),
+        createdBy: response.bill.createdBy || 'Unknown',
+        totalAmount: response.bill.totalAmount || 0
+      });
+      setPdfPath(`${BASE_URL}${response.pdfUrl}` || '');
+      setOpenBillModal(true);
     } catch (error) {
       console.error('Error creating bill:', error);
     }
   };
-  
 
   const handleLogout = async() => {
     const refreshToken = localStorage.getItem(Constants.refreshToken)
@@ -203,14 +206,19 @@ const Home = () => {
         </div>
         <Box>
         {isMultiSelectMode && (
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleCreateBill}
-          disabled={selectedProducts.length === 0}
-        >
-          Create Bill
-        </Button>
+        <>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleCreateBill}
+            disabled={selectedProducts.length === 0}
+          >
+            Create Bill
+          </Button>
+          <Typography variant='h6' className='p-4'>
+            Total payable amount is: {totalPayableAmount}
+          </Typography>
+        </>
       )}
         </Box>
 
@@ -223,10 +231,10 @@ const Home = () => {
 
         { billData && (
             <BillConfirmationModal
-                open={openBillModal} 
-                onClose={() => setOpenBillModal(false)} 
-                billData={billData} 
-                pdfPath={pdfPath}
+              open={openBillModal} 
+              onClose={() => setOpenBillModal(false)} 
+              billData={billData} 
+              pdfPath={pdfPath}
             /> 
         )}
       </div>
@@ -235,4 +243,3 @@ const Home = () => {
 };
 
 export default Home;
-

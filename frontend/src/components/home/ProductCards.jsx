@@ -1,8 +1,30 @@
+import React, { useMemo, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Card, CardContent, CardActions, Typography, IconButton, Checkbox, TextField } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
-const ProductCard = ({ product, isMultiSelectMode, selectedProducts, handleEditProduct, handleDeleteProduct, handleSelectProduct }) => {
+const ProductCard = React.memo(({ product, isMultiSelectMode, handleEditProduct, handleDeleteProduct, handleSelectProduct }) => {
+  const selectedProducts = useSelector(state => state.selectedProducts);
+
   const isOutOfStock = product.quantity === 0;
+
+  const selectedProduct = useMemo(() => 
+    selectedProducts.find(p => p.productId === product._id),
+    [selectedProducts, product._id]
+  );
+
+  const isSelected = !!selectedProduct;
+
+  const handleSelect = useCallback((checked) => {
+    handleSelectProduct(product._id, checked ? 1 : 0, product.price);
+  }, [handleSelectProduct, product._id, product.price]);
+
+  const handleQuantityChange = useCallback((e) => {
+    const quantity = Number(e.target.value);
+    if (quantity > 0 && quantity <= product.quantity) {
+      handleSelectProduct(product._id, quantity, product.price);
+    }
+  }, [handleSelectProduct, product._id, product.price, product.quantity]);
 
   return (
     <Card className="flex flex-col">
@@ -18,6 +40,11 @@ const ProductCard = ({ product, isMultiSelectMode, selectedProducts, handleEditP
             product.quantity
           )}
         </Typography>
+        {isSelected && (
+          <Typography variant="body2" color="primary">
+            Payable: &#x20b9;{(product.price * selectedProduct.quantity).toFixed(2)}
+          </Typography>
+        )}
       </CardContent>
       <CardActions className="mt-auto">
         {isMultiSelectMode ? (
@@ -27,24 +54,16 @@ const ProductCard = ({ product, isMultiSelectMode, selectedProducts, handleEditP
             ) : (
               <>
                 <Checkbox
-                  checked={selectedProducts.some(p => p.productId === product._id)}
-                  onChange={(e) => handleSelectProduct(product._id, e.target.checked ? 1 : 0)}
+                  checked={isSelected}
+                  onChange={(e) => handleSelect(e.target.checked)}
                 />
                 <TextField
                   type="number"
                   label="Quantity"
                   InputProps={{ inputProps: { min: 1, max: product.quantity } }}
-                  value={selectedProducts.find(p => p.productId === product._id)?.quantity || ''}
-                  onChange={(e) => {
-                    const quantity = Number(e.target.value);
-                    // Set quantity to max if it exceeds available quantity
-                    if (quantity > product.quantity) {
-                      handleSelectProduct(product._id, product.quantity);
-                    } else {
-                      handleSelectProduct(product._id, quantity);
-                    }
-                  }}
-                  disabled={!selectedProducts.some(p => p.productId === product._id)}
+                  value={isSelected ? selectedProduct?.quantity : ''}
+                  onChange={handleQuantityChange}
+                  disabled={!isSelected}
                   size="small"
                 />
               </>
@@ -63,6 +82,6 @@ const ProductCard = ({ product, isMultiSelectMode, selectedProducts, handleEditP
       </CardActions>
     </Card>
   );
-};
+});
 
 export default ProductCard;
