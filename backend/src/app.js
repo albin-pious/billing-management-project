@@ -15,7 +15,11 @@ const __dirname = getDirname(import.meta.url);
 // database configuration.
 dbConnection();
 
+
 app.use(cors(config.corsOptions));
+// Handle preflight requests
+app.options('*', cors(config.corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -26,6 +30,10 @@ app.use((err, req, res, next)=>{
     console.error(err.stack);
     res.status(500).send('Something broke! Internal Server Error');
 })
+
+console.log('CORS Settings:', JSON.stringify(config.corsOptions, null, 2));
+console.log('Frontend URL:', config.frontendURL);
+console.log('Environment:', config.environment);
 
 app.listen(port, ()=>{
     console.log(`Server running on port http://127.0.0.1:${port}`);

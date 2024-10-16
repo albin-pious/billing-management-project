@@ -6,7 +6,7 @@ const config = {
     dbConnectionString: process.env.DB_CONNECTION_STRING,
     frontendURL: process.env.FRONTEND_URL,
     corsOptions: {
-        origin: '*',
+        origin: process.env.FRONTEND_URL || "*",
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
         allowHeaders: ['Authorization', 'Content-Type']
