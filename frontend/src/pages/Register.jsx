@@ -21,7 +21,7 @@ const RegisterPage = () => {
   const handleRegister = async (data) => {
     try {
        const response = await postApi('/auth/register', data);
-      if (response.status === 201) {
+      if (response.userId) {
         // If successful, show success message
         setSuccessMessage(`Registration successful for ${data.name}`);
       }else {
