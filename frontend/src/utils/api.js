@@ -1,11 +1,11 @@
 import axios from 'axios'
 const api = axios.create({
-    baseURL: "http://127.0.0.1:5000/api",
+    baseURL: import.meta.env.VITE_BASE_URL,
     withCredentials: true,
 });
 
-export const BASE_URL = "http://127.0.0.1:5000"
-
+export const BASE_URL = import.meta.env.VITE_BASE_URL
+console.log(BASE_URL);
 // Request interceptor to attach token to headers
 api.interceptors.request.use(
     config => {
