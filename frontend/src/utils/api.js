@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const BASE_URL = import.meta.env.VITE_BASE_URL
+export const BASE_URL = `https://billing-management-project.onrender.com`
 export const API_URL = `${BASE_URL}/api`
 const api = axios.create({
     baseURL: API_URL,
