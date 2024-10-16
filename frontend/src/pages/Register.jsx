@@ -22,7 +22,7 @@ const RegisterPage = () => {
     try {
        const response = await postApi('/auth/register', data);
        console.log("::: ",response);
-      if (response.status === 200) {
+      if (response.status === 201) {
         // If successful, show success message
         setSuccessMessage(`Registration successful for ${data.name}`);
       }else {
