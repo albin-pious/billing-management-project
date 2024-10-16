@@ -1,11 +1,14 @@
 import axios from 'axios'
+
+export const BASE_URL = import.meta.env.VITE_BASE_URL
+export const API_URL = `${BASE_URL}/api`
 const api = axios.create({
-    baseURL: import.meta.env.VITE_BASE_URL+"/api",
+    baseURL: API_URL,
     withCredentials: true,
 });
 
-export const BASE_URL = import.meta.env.VITE_BASE_URL
-console.log(BASE_URL);
+
+console.log(API_URL);
 // Request interceptor to attach token to headers
 api.interceptors.request.use(
     config => {
