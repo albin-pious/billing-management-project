@@ -34,7 +34,13 @@ const RegisterForm = ({ onSubmit }) => {  // Ensure it's called onSubmit here
         label="Password"
         name="password"
         type="password"
-        register={register("password", { required: "Password is required" })}
+        register={register("password", { 
+          required: "Password is required",
+          minLength: {
+            value: 4,
+            message: "Password must be at least 4 characters long"
+          }
+        })}
         error={errors.password}
       />
       <InputField
